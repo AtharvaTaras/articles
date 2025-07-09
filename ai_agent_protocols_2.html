@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Agent Protocols Overview</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      color: #333;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+      color: #005b96;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+    .header {
+      font-weight: bold;
+      background: #e1ecf4;
+      padding: 1rem;
+      border-radius: 8px;
+      color: #003366;
+    }
+    .cell {
+      background: #ffffff;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .protocol-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #005b96;
+      margin-bottom: 0.5rem;
+    }
+    .tag {
+      font-size: 0.85rem;
+      font-weight: bold;
+      background: #cce5ff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Know Your AI Agent Protocols</h1>
+  <div class="grid">
+    <div class="header">Built / Governance</div>
+    <div class="header">Core Purpose</div>
+    <div class="header">Key Architecture</div>
+    <div class="header">Message Transport</div>
+
+    <!-- MCP -->
+    <div class="cell">
+      <div class="protocol-name">MCP</div>
+      <div class="tag">Model Context Protocol</div>
+      Led by Anthropic and partners like Microsoft, open standard.
+    </div>
+    <div class="cell">Provides LLMs a universal “USB-C” for accessing real-time tools, prompts, and context.</div>
+    <div class="cell">Layered client-server split with JSON-RPC. Supports multiple data transport mechanisms.</div>
+    <div class="cell">Bi-directional via JSON-RPC 2.0 over stdio, HTTP, SSE. Streaming supported.</div>
+
+    <!-- A2A -->
+    <div class="cell">
+      <div class="protocol-name">A2A</div>
+      <div class="tag">Agent-to-Agent</div>
+      Google-initiated, vendor-neutral, and community-driven.
+    </div>
+    <div class="cell">Enables black-box agents to discover and collaborate: task sharing, updates, streaming.</div>
+    <div class="cell">Task-based actor model with remote agents and async operations.</div>
+    <div class="cell">JSON-RPC 2.0 over stdio, HTTP, SSE. Supports bi-directional and async streams.</div>
+
+    <!-- ACP -->
+    <div class="cell">
+      <div class="protocol-name">ACP</div>
+      <div class="tag">Agent Communication Protocol</div>
+      Linux Foundation standard with backing from IBM, BeeAI.
+    </div>
+    <div class="cell">Connects internal agents using minimal REST APIs. Built for frameworks like LangChain, BeeAI.</div>
+    <div class="cell">Supports flexible topologies and orchestrations across single/multi-servers.</div>
+    <div class="cell">Uses REST with MIME-typed payloads. Async-friendly with metadata-based discovery.</div>
+
+    <!-- ANP -->
+    <div class="cell">
+      <div class="protocol-name">ANP</div>
+      <div class="tag">Agent Network Protocol</div>
+      Community-led and open-source via ANP Org.
+    </div>
+    <div class="cell">Builds decentralized, peer-to-peer networks of identity-first agents.</div>
+    <div class="cell">Three-layer architecture with identity (DID), meta-protocol negotiation, and semantic web APIs.</div>
+    <div class="cell">Uses JSON-LD across channels like HTTP or Libp2p. Dynamic protocol selection.</div>
+  </div>
+</body>
+</html>

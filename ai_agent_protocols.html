@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Agent Protocols Explained</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a40, #0f2027);
+      color: #fff;
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 1rem;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      font-size: 3rem;
+      text-shadow: 1px 1px 4px #000;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      padding: 4rem 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 2.5rem;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px) scale(1.015);
+      box-shadow: 0 20px 45px rgba(0, 255, 255, 0.3);
+    }
+
+    .protocol {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00ffff;
+      margin-bottom: 1rem;
+      text-shadow: 1px 1px 2px black;
+    }
+
+    .section-title {
+      font-weight: bold;
+      color: #ffe066;
+      margin-top: 1.2rem;
+      display: block;
+      font-size: 1.25rem;
+    }
+
+    .card div {
+      margin-bottom: 0.6rem;
+      font-size: 1.15rem;
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🤖 AI Agent Protocols: An Overview</h1>
+</header>
+
+<main class="container">
+
+  <div class="card">
+    <div class="protocol">🔌 MCP – Model Context Protocol</div>
+    <div><span class="section-title">Governance:</span> Spearheaded by Anthropic and supported by big names like Microsoft and Windows AI Foundry. It’s an open standard aiming for wide adoption.</div>
+    <div><span class="section-title">Purpose:</span> MCP acts like a universal adapter (think USB-C) for LLMs, enabling them to plug into external tools, live context streams, and third-party data in real-time.</div>
+    <div><span class="section-title">Architecture:</span> Uses a layered client-server model. The host LLM app communicates with external services (tools, APIs, prompts) via JSON-RPC and middleware clients. Supports multiple communication transports.</div>
+    <div><span class="section-title">Message Transport:</span> Communicates using JSON-RPC 2.0 over stdio, HTTP, and Server-Sent Events (SSE). It supports bidirectional calls and real-time streaming, enabling dynamic updates.</div>
+  </div>
+
+  <div class="card">
+    <div class="protocol">🤝 A2A – Agent-to-Agent</div>
+    <div><span class="section-title">Governance:</span> Launched by Google and developed collaboratively as a vendor-neutral, community-driven open specification.</div>
+    <div><span class="section-title">Purpose:</span> A2A allows AI agents to discover and interact with each other, enabling them to collaborate, share workloads, stream updates, and coordinate actions without needing to know internal mechanics.</div>
+    <div><span class="section-title">Architecture:</span> Based on a task-oriented actor model. Agents act as remote actors. They publish their capabilities and status via standardized Agent Cards (hosted at `/.well-known/agent.json`). Optimized for async, long-running tasks.</div>
+    <div><span class="section-title">Message Transport:</span> Relies on JSON-RPC 2.0 over multiple transport layers — including stdio, HTTP, and Server-Sent Events. Streaming and async support are first-class citizens.</div>
+  </div>
+
+  <div class="card">
+    <div class="protocol">🔗 ACP – Agent Communication Protocol</div>
+    <div><span class="section-title">Governance:</span> Developed as a Linux Foundation standard with contributions from IBM, BeeAI, and other ecosystem players. Open and modular in design.</div>
+    <div><span class="section-title">Purpose:</span> ACP is designed to link internal agents inside a system using a minimal REST API. It integrates well with agent orchestration frameworks like LangChain, CrewAI, and BeeAI.</div>
+    <div><span class="section-title">Architecture:</span> Supports flexible topologies: single-agent servers, multi-agent per server, or distributed clusters. Comes with a built-in router-agent orchestration layer to manage coordination.</div>
+    <div><span class="section-title">Message Transport:</span> Uses simple RESTful interfaces with MIME-typed payloads. Async-first, but sync is supported. Agents can discover each other via metadata-based service announcements.</div>
+  </div>
+
+  <div class="card">
+    <div class="protocol">🌐 ANP – Agent Network Protocol</div>
+    <div><span class="section-title">Governance:</span> A fully grassroots, open-source effort developed under the ANP organization. It’s focused on building a decentralized AI agent ecosystem.</div>
+    <div><span class="section-title">Purpose:</span> ANP enables peer-to-peer networking between identity-first agents. Agents negotiate, communicate, and coordinate without needing a central authority.</div>
+    <div><span class="section-title">Architecture:</span> Built on three layers: (1) Identity Layer using Decentralized Identifiers (DIDs); (2) Meta-Protocol for runtime negotiation; (3) App Layer that supports rich, semantic APIs (e.g., JSON-LD).</div>
+    <div><span class="section-title">Message Transport:</span> Agents exchange JSON-LD messages over any supported channel — HTTP, libp2p, etc. Identity and protocol selection is dynamic and flexible.</div>
+  </div>
+
+</main>
+
+</body>
+</html>
