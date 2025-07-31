@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ip vs uv: The New Era of Python Packaging</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e7e7e7;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .gradient-text {
+            background: linear-gradient(45deg, #45dfc0, #113c70);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .kpi-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #c4c4c4;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.363), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            background-color: #F9FAFB;
+            border: 1px solid #cfcfcf;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #1F2937;
+            min-height: 60px;
+        }
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #3B4A5A;
+            margin: 0.25rem 0;
+        }
+        .feature-table td, .feature-table th {
+            padding: 1rem;
+            border-bottom: 1px solid #E5E7EB;
+            text-align: left;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .resolver-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            background-color: #F9FAFB;
+        }
+        .resolver-box {
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .action-btn {
+            background-color: #0A2342;
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+        .action-btn:hover {
+            background-color: #2CA58D;
+        }
+    </style>
+</head>
+<body class="text-[#0A2342]">
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12 md:mb-16">
+            <h1 class="text-7xl md:text-6xl font-black mb-4">
+                <span class="gradient-text">pip vs. uv</span>
+            </h1>
+            <p class="text-xl md:text-2xl font-semibold mb-2">The New Era of Python Packaging</p>
+            <p class="max-w-3xl mx-auto text-[#3B4A5A]">A deep-dive analysis of Python's development workflow, comparing the incumbent `pip` with the high-performance challenger `uv`. This infographic synthesizes findings on speed, usability, and reproducibility.</p>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 md:mb-16">
+            <div class="kpi-card">
+                <p class="text-6xl font-black text-[#2CA58D]">10-100x</p>
+                <h3 class="text-lg font-bold mt-2">Faster Than Pip</h3>
+                <p class="text-sm text-[#3B4A5A] mt-1">`uv` leverages Rust, parallelism, and advanced global caching for dramatic speed gains, reducing CI/CD pipeline times from minutes to seconds.</p>
+            </div>
+            <div class="kpi-card">
+                <p class="text-6xl font-black text-[#2CA58D]">5-in-1</p>
+                <h3 class="text-lg font-bold mt-2">Unified Toolchain</h3>
+                <p class="text-sm text-[#3B4A5A] mt-1">Replaces `pip`, `venv`, `pip-tools`, `pipx`, and `virtualenv` with a single, coherent binary, drastically reducing cognitive overhead for developers.</p>
+            </div>
+            <div class="kpi-card">
+                <p class="text-6xl font-black text-[#2CA58D]">100%</p>
+                <h3 class="text-lg font-bold mt-2">Reproducible Builds</h3>
+                <p class="text-sm text-[#3B4A5A] mt-1">Generates a universal, platform-agnostic `uv.lock` file, guaranteeing identical environments across all machines and operating systems.</p>
+            </div>
+        </section>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">The Performance Revolution</h2>
+                <p class="text-[#3B4A5A] mb-6">`uv`'s performance is its most notable feature, a step-change improvement over `pip`. This is not just about speed, but about enabling more efficient workflows, especially in CI/CD where every second counts. The difference is most pronounced with warm caches, reflecting real-world development cycles.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="font-bold text-center mb-2">Installation Time (seconds)</h3>
+                        <p class="text-sm text-center text-[#3B4A5A] mb-4">A direct comparison of `pip` and `uv` installation times. Note the logarithmic scale used to visualize the vast difference.</p>
+                        <div class="chart-container">
+                            <canvas id="speedChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-center mb-2">Virtual Environment Creation Time (ms)</h3>
+                        <p class="text-sm text-center text-[#3B4A5A] mb-4">Near-instantaneous environment creation with `uv` makes them feel lightweight and disposable. (Lower is better).</p>
+                        <div class="chart-container">
+                            <canvas id="venvChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">A Tale of Two Workflows</h2>
+                <p class="text-[#3B4A5A] mb-6">Setting up a project and adding a dependency highlights the core philosophical difference: `pip`'s manual, multi-tool approach versus `uv`'s automated, integrated system that manages environments and dependencies in a single, atomic operation.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                        <h3 class="font-bold mb-4 text-center">Traditional `pip` + `venv` Workflow</h3>
+                        <div class="space-y-2">
+                            <div class="flow-step"><span>1.</span><code class="ml-2">python -m venv .venv</code></div>
+                            <p class="text-xs text-gray-500 -mt-2 ml-4">Manually create an isolated environment.</p>
+                            <div class="flow-arrow">▼</div>
+                            <div class="flow-step"><span>2.</span><code class="ml-2">source .venv/bin/activate</code></div>
+                            <p class="text-xs text-gray-500 -mt-2 ml-4">Manually activate the environment in the shell.</p>
+                            <div class="flow-arrow">▼</div>
+                            <div class="flow-step"><span>3.</span><code class="ml-2">pip install requests</code></div>
+                            <p class="text-xs text-gray-500 -mt-2 ml-4">Install package into the active environment.</p>
+                            <div class="flow-arrow">▼</div>
+                            <div class="flow-step"><span>4.</span><code class="ml-2">(Add "requests" to requirements.in)</code></div>
+                            <p class="text-xs text-gray-500 -mt-2 ml-4">Manually declare the direct dependency.</p>
+                             <div class="flow-arrow">▼</div>
+                            <div class="flow-step"><span>5.</span><code class="ml-2">pip-compile > requirements.txt</code></div>
+                            <p class="text-xs text-gray-500 -mt-2 ml-4">Manually generate a pinned, platform-specific lock file.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold mb-4 text-center">Modern `uv` Workflow</h3>
+                        <div class="flow-step flex-col items-start justify-center !h-auto py-4">
+                            <div class="flex items-center"><span class="mr-2">1.</span><code>uv add requests</code></div>
+                            <p class="text-sm text-[#3B4A5A] mt-4">`uv` handles everything in one atomic step:</p>
+                            <ul class="list-disc list-inside text-xs text-gray-600 mt-2 space-y-1">
+                                <li>Detects or creates a virtual environment.</li>
+                                <li>Adds `requests` to `pyproject.toml`.</li>
+                                <li>Resolves the complete dependency graph.</li>
+                                <li>Updates the universal `uv.lock` file.</li>
+                                <li>Installs `requests` into the environment.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">Resolver Architecture</h2>
+                <p class="text-[#3B4A5A] mb-6">`uv`'s holistic, PubGrub-based resolver analyzes the entire dependency graph at once, preventing conflicts. `pip`'s backtracking resolver works sequentially, which can lead to more complex conflict resolution paths.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="resolver-diagram">
+                        <h4 class="font-bold text-center text-sm">pip (Backtracking)</h4>
+                        <div class="resolver-box bg-blue-100 text-blue-800">Start: A</div>
+                        <div class="text-center text-xs">→ depends on B</div>
+                        <div class="resolver-box bg-blue-100 text-blue-800">Try: B v2.0</div>
+                        <div class="text-center text-xs">→ conflicts with C</div>
+                        <div class="resolver-box bg-red-100 text-red-800">Backtrack!</div>
+                        <div class="resolver-box bg-blue-100 text-blue-800">Try: B v1.0</div>
+                        <div class="text-center text-xs">→ OK</div>
+                        <div class="resolver-box bg-green-100 text-green-800">Success</div>
+                    </div>
+                    <div class="resolver-diagram">
+                        <h4 class="font-bold text-center text-sm">uv (Holistic)</h4>
+                        <div class="resolver-box bg-purple-100 text-purple-800">Analyze: {A, B, C}</div>
+                        <div class="text-center text-xs">Find global solution</div>
+                        <div class="resolver-box bg-green-100 text-green-800">Solve: {A, B v1.0, C}</div>
+                        <p class="text-xs text-center text-gray-500 mt-2">Finds the optimal path directly, providing clearer error messages on failure.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+  <h2 class="text-2xl font-bold mb-1">Ecosystem Consolidation</h2>
+  <p class="text-[#3B4A5A]">
+    uv replaces a fragmented set of tools with a single, powerful binary, simplifying the developer toolchain and reducing cognitive overhead.
+  </p>
+  
+    <!-- Responsive container -->
+    <div class="flex flex-wrap items-center justify-center gap-6">
+        <!-- Before -->
+        <div class="text-center space-y-2">
+        <h4 class="font-bold">Before</h4>
+        <div class="flex flex-wrap justify-center gap-2 text-xs">
+            <span class="p-2 bg-gray-200 rounded">pip</span>
+            <span class="p-2 bg-gray-200 rounded">venv</span>
+            <span class="p-2 bg-gray-200 rounded">pipx</span>
+            <span class="p-2 bg-gray-200 rounded">pip-tools</span>
+            <span class="p-2 bg-gray-200 rounded">virtualenv</span>
+        </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="text-4xl font-thin text-gray-400">→</div>
+
+        <!-- After -->
+        <div class="text-center">
+        <h4 class="font-bold">After</h4>
+        <div class="p-2 bg-[#2CA58D] text-white rounded-lg font-bold text-2xl">uv</div>
+        </div>
+    </div>
+    </div>
+
+
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">Feature Deep Dive: Reproducibility</h2>
+                <p class="text-[#3B4A5A] mb-6">True reproducibility is critical for collaborative development and reliable deployments. `uv`'s native, universal lockfile provides a much stronger guarantee of consistency than traditional `requirements.txt` files.</p>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left font-bold text-[#0A2342] bg-gray-50">
+                            <th>Feature</th>
+                            <th>pip + pip-tools</th>
+                            <th>uv</th>
+                        </tr>
+                    </thead>
+                    <tbody class="feature-table">
+                        <tr>
+                            <td class="font-semibold">Lockfile Format</td>
+                            <td>`requirements.txt`</td>
+                            <td class="font-semibold text-[#2CA58D]">`uv.lock` (TOML)</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Platform Portability</td>
+                            <td>Platform-specific (requires separate locks or markers)</td>
+                            <td class="font-semibold text-[#2CA58D]">Universal (contains all platforms/py-versions)</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Conflict Errors</td>
+                            <td>Can be verbose and hard to trace</td>
+                            <td class="font-semibold text-[#2CA58D]">Clear, concise, and actionable</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Resolution Strategy</td>
+                            <td>Always latest compatible version</td>
+                            <td class="font-semibold text-[#2CA58D]">Supports `lowest` for library testing</td>
+                        </tr>
+                         <tr>
+                            <td class="font-semibold">Cross-Environment Resolve</td>
+                            <td><span class="tag bg-red-100 text-red-800">No</span> Resolves for current environment only</td>
+                            <td class="font-semibold text-[#2CA58D]"><span class="tag bg-green-100 text-green-800">Yes</span> Can resolve for any target</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">⚙️ Migration Assistant</h2>
+                <p class="text-[#3B4A5A] mb-6">Accelerate your migration from `pip` to `uv`. Paste your `requirements.txt` content below and get instant conversions right in your browser.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="requirementsInput" class="block text-sm font-medium text-gray-700 mb-2">Paste your requirements.txt content here:</label>
+                        <textarea id="requirementsInput" rows="10" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2CA58D] focus:border-[#2CA58D]" placeholder="pandas==2.2.0&#10;requests>=2.30.0&#10;fastapi"></textarea>
+                        <div class="flex justify-center gap-4 mt-4">
+                            <button id="tomlBtn" class="action-btn flex-1 max-w-xs">Generate pyproject.toml</button>
+                            <button id="uvBtn" class="action-btn flex-1 max-w-xs">Generate uv commands</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="output" class="block text-sm font-medium text-gray-700 mb-2">Generated Output:</label>
+                        <pre id="outputWrapper" class="bg-gray-900 text-white p-4 rounded-md h-64 overflow-y-auto font-mono text-sm"><code id="output">Your output will appear here...</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-1">The Verdict: A Framework for Choice</h2>
+                <p class="text-[#3B4A5A] mb-6">The choice depends on project needs and team priorities. `pip` remains the stable incumbent for legacy systems, while `uv` is the clear and compelling choice for all modern Python development.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h3 class="font-bold text-lg mb-2">Stick with `pip` for:</h3>
+                        <ul class="list-disc list-inside text-sm space-y-2 text-gray-600">
+                            <li>Maintaining legacy projects with stable, embedded workflows.</li>
+                            <li>Conservative environments prioritizing maximum stability over performance.</li>
+                            <li>Projects relying on niche legacy features like `.egg` installs.</li>
+                        </ul>
+                    </div>
+                    <div class="border-2 border-[#2CA58D] rounded-lg p-4 bg-green-50">
+                        <h3 class="font-bold text-lg mb-2 text-[#0A2342]">Recommended: Adopt `uv` for:</h3>
+                        <ul class="list-disc list-inside text-sm space-y-2 text-[#0A2342]">
+                            <li><strong>All new Python projects, without exception.</strong></li>
+                            <li>Large projects with complex dependencies (e.g., AI/ML, web backends).</li>
+                            <li>Optimizing CI/CD build times to reduce costs and accelerate feedback.</li>
+                            <li>Teams seeking a simplified, modern, and ergonomic developer workflow.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+
+    </div>
+
+    <script>
+        const FONT_COLOR = '#0A2342';
+        const GRID_COLOR = '#E5E7EB';
+        const PRIMARY_COLOR = '#2CA58D';
+        const SECONDARY_COLOR = '#0A2342';
+        const TERTIARY_COLOR = '#F4A261';
+        const QUATERNARY_COLOR = '#3B4A5A';
+
+        const wrapLabel = (label) => {
+            const maxLength = 16;
+            if (label.length <= maxLength) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            words.forEach(word => {
+                if ((currentLine + ' ' + word).trim().length > maxLength) {
+                    lines.push(currentLine.trim());
+                    currentLine = word;
+                } else {
+                    currentLine = (currentLine + ' ' + word).trim();
+                }
+            });
+            if (currentLine) lines.push(currentLine.trim());
+            return lines;
+        };
+        
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) return label.join(' ');
+            return label;
+        };
+
+        const SHARED_CHART_OPTIONS = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: FONT_COLOR, font: { family: "'Inter', sans-serif" } }
+                },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
+                    titleFont: { family: "'Inter', sans-serif" },
+                    bodyFont: { family: "'Inter', sans-serif" },
+                    footerFont: { family: "'Inter', sans-serif" },
+                    callbacks: { title: tooltipTitleCallback }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: FONT_COLOR, font: { family: "'Inter', sans-serif" } },
+                    grid: { color: GRID_COLOR }
+                },
+                y: {
+                    ticks: { color: FONT_COLOR, font: { family: "'Inter', sans-serif" } },
+                    grid: { color: GRID_COLOR }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        };
+
+        const speedChartCtx = document.getElementById('speedChart').getContext('2d');
+        new Chart(speedChartCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Cold Cache', 'Warm Cache'],
+                datasets: [
+                    {
+                        label: 'pip',
+                        data: [180, 42],
+                        backgroundColor: QUATERNARY_COLOR,
+                    },
+                    {
+                        label: 'uv',
+                        data: [18, 0.4],
+                        backgroundColor: PRIMARY_COLOR,
+                    }
+                ]
+            },
+            options: {
+                ...SHARED_CHART_OPTIONS,
+                scales: {
+                    x: { stacked: false },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Time (seconds, log scale)', color: FONT_COLOR },
+                        ticks: {
+                            color: FONT_COLOR,
+                            callback: function(value, index, values) {
+                                return Number(value.toString());
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    ...SHARED_CHART_OPTIONS.plugins,
+                    tooltip: {
+                        ...SHARED_CHART_OPTIONS.plugins.tooltip,
+                        callbacks: {
+                             ...SHARED_CHART_OPTIONS.plugins.tooltip.callbacks,
+                             label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + 's';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const venvChartCtx = document.getElementById('venvChart').getContext('2d');
+        new Chart(venvChartCtx, {
+            type: 'bar',
+            data: {
+                labels: ['vs. python -m venv', 'vs. virtualenv'],
+                datasets: [
+                    {
+                        label: 'Legacy Tool',
+                        data: [2400, 210],
+                        backgroundColor: QUATERNARY_COLOR,
+                    },
+                    {
+                        label: 'uv',
+                        data: [30, 30],
+                        backgroundColor: PRIMARY_COLOR,
+                    }
+                ]
+            },
+             options: { 
+                ...SHARED_CHART_OPTIONS, 
+                scales: { 
+                    x: { 
+                        ticks: {
+                            color: FONT_COLOR,
+                        }
+                    },
+                    y: { 
+                        title: { display: true, text: 'Time (milliseconds)' }
+                    }
+                },
+                plugins: {
+                    ...SHARED_CHART_OPTIONS.plugins,
+                    tooltip: {
+                        ...SHARED_CHART_OPTIONS.plugins.tooltip,
+                        callbacks: {
+                            ...SHARED_CHART_OPTIONS.plugins.tooltip.callbacks,
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + 'ms';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+             }
+        });
+
+        const tomlBtn = document.getElementById('tomlBtn');
+        const uvBtn = document.getElementById('uvBtn');
+        const requirementsInput = document.getElementById('requirementsInput');
+        const output = document.getElementById('output');
+        
+        const parseRequirements = (text) => {
+            return text
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('#'));
+        };
+
+        tomlBtn.addEventListener('click', () => {
+            const userInput = requirementsInput.value;
+            if (!userInput.trim()) {
+                output.textContent = "Please enter some requirements first.";
+                return;
+            }
+            const packages = parseRequirements(userInput);
+            const tomlOutput = `[project.dependencies]\ndependencies = [\n${packages.map(pkg => `    "${pkg.replace(/"/g, '\\"')}"`).join(',\n')}\n]`;
+            output.textContent = tomlOutput;
+        });
+
+        uvBtn.addEventListener('click', () => {
+            const userInput = requirementsInput.value;
+            if (!userInput.trim()) {
+                output.textContent = "Please enter some requirements first.";
+                return;
+            }
+            const packages = parseRequirements(userInput);
+            const uvOutput = `uv add ${packages.map(pkg => `"${pkg.replace(/"/g, '\\"')}"`).join(' ')}`;
+            output.textContent = uvOutput;
+        });
+
+    </script>
+</body>
+</html>
