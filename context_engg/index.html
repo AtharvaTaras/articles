@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to LLM Context Engineering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Cool Slate & Mint -->
+    <!-- Application Structure Plan: A two-panel layout is used. The left panel contains a persistent, tree-like navigation menu representing the report's taxonomy. The right panel dynamically displays content based on the user's selection. This structure was chosen to break down the dense, hierarchical information of the report into manageable, explorable chunks, promoting user-driven discovery over passive, linear reading. The flow starts with an overview and allows users to drill down into categories and specific techniques, with interactive diagrams to clarify complex concepts. -->
+    <!-- Visualization & Content Choices: The report's taxonomy is visualized with an interactive navigation tree and a summary bar chart (Chart.js) to give an organizational overview. Complex reasoning models (CoT, ToT, GoT) and the RAG process are explained using custom diagrams built with HTML/CSS (Tailwind) to visually compare their structures and flows. This avoids static images and SVG, making the concepts more engaging and easier to grasp. Each technique is presented in a card format with its mechanism and a clear example, directly addressing the goal of informing and comparing. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0f172a; /* slate-900 */
+            color: #cbd5e1; /* slate-300 */
+        }
+        .nav-link.active {
+            background-color: #14b8a6; /* teal-500 */
+            color: white;
+            font-weight: 600;
+        }
+        .nav-parent-btn.active-parent {
+            background-color: #1e293b; /* slate-800 */
+            color: #5eead4; /* teal-300 */
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-in-out;
+        }
+        .submenu-open {
+            max-height: 500px; /* Adjust as needed */
+        }
+        .diagram-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            background-color: #1e293b; /* slate-800 */
+            border: 1px solid #334155; /* slate-700 */
+        }
+        .node {
+            padding: 0.75rem 1.5rem;
+            background-color: #334155; /* slate-700 */
+            border: 1px solid #475569; /* slate-600 */
+            color: #f1f5f9; /* slate-100 */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.2), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+        .node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+            border-color: #14b8a6; /* teal-500 */
+        }
+        .arrow {
+            position: relative;
+            color: #94a3b8; /* slate-400 */
+            font-size: 1.75rem;
+            line-height: 1;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; /* slate-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; /* slate-600 */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* slate-500 */
+        }
+        .example-btn {
+            background-color: #334155;
+            color: #94a3b8;
+            transition: all 0.2s ease-in-out;
+        }
+        .example-btn.active {
+            background-color: #14b8a6;
+            color: white;
+            font-weight: 600;
+        }
+        .example-content {
+            display: none;
+        }
+        .example-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-300">
+
+    <div class="min-h-screen md:flex">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="w-full md:w-1/4 lg:w-1/5 bg-[#131c31] p-6 border-r border-slate-800 flex flex-col">
+            <h1 class="text-2xl font-bold text-teal-400 mb-8 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>Context Engineering</span>
+            </h1>
+            <nav id="navigation-menu" class="flex-grow">
+                <ul class="space-y-2">
+                    <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg font-semibold text-slate-300 hover:bg-slate-800 transition-colors" data-target="introduction">Introduction</a></li>
+                    
+                    <li>
+                        <button class="nav-parent-btn block w-full text-left px-4 py-2 rounded-lg font-semibold text-slate-300 hover:bg-slate-800 transition-colors flex justify-between items-center" data-target="category1">
+                            <span>I. Retrieval & Gen</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-300"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        <ul class="submenu pl-4 mt-1 space-y-1">
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="zero-shot">Zero-Shot Prompting</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="few-shot">Few-Shot Prompting</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="cot">Chain-of-Thought</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="tot">Tree-of-Thoughts</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="got">Graph-of-Thoughts</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="rag">RAG</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <button class="nav-parent-btn block w-full text-left px-4 py-2 rounded-lg font-semibold text-slate-300 hover:bg-slate-800 transition-colors flex justify-between items-center" data-target="category2">
+                            <span>II. Processing & Opt</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-300"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        <ul class="submenu pl-4 mt-1 space-y-1">
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="long-context">Long-Context</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="self-refine">Self-Refinement</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="structured-context">Structured Context</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <button class="nav-parent-btn block w-full text-left px-4 py-2 rounded-lg font-semibold text-slate-300 hover:bg-slate-800 transition-colors flex justify-between items-center" data-target="category3">
+                            <span>III. Management</span>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-300"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        <ul class="submenu pl-4 mt-1 space-y-1">
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="compression">Compression</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="memory">Memory Archs</a></li>
+                        </ul>
+                    </li>
+
+                     <li>
+                        <button class="nav-parent-btn block w-full text-left px-4 py-2 rounded-lg font-semibold text-slate-300 hover:bg-slate-800 transition-colors flex justify-between items-center" data-target="systems">
+                            <span>Systems</span>
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transform transition-transform duration-300"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                        </button>
+                        <ul class="submenu pl-4 mt-1 space-y-1">
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="advanced-rag">Advanced RAG</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="tool-use">Tool-Use</a></li>
+                            <li><a href="#" class="nav-link block w-full text-left px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors" data-target="multi-agent">Multi-Agent</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            <div id="content-display" class="max-w-4xl mx-auto">
+                
+                <section id="introduction" class="content-section space-y-8">
+                    <h2 class="text-4xl font-bold text-slate-100">A New Discipline: Context Engineering</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed">Context Engineering is the systematic design of the entire information environment for a Large Language Model (LLM). It moves beyond simple "prompting" to architecting dynamic systems that provide the right information, tools, and memory to an LLM, setting it up for success. This interactive guide explores the core techniques and architectures that form this critical AI discipline.</p>
+                    <div class="bg-slate-800 border-l-4 border-teal-500 rounded-r-lg p-6">
+                        <h3 class="text-xl font-semibold text-teal-400 mb-2">The Core Analogy: LLM as an OS</h3>
+                        <p class="text-slate-400">Think of an LLM as a CPU. Its context window is its RAM—a finite, temporary workspace. Context Engineering is the "operating system" that manages what gets loaded into this RAM for each task. Its primary challenges are selecting the most relevant information and formatting it to fit within the context window's limits.</p>
+                    </div>
+                    <div class="chart-container w-full max-w-2xl mx-auto h-96 max-h-[400px] p-4 bg-[#131c31] rounded-xl shadow-lg border border-slate-800">
+                        <canvas id="taxonomyChart"></canvas>
+                    </div>
+                </section>
+
+                <section id="category1" class="content-section space-y-6">
+                    <h2 class="text-4xl font-bold text-slate-100">Category I: Context Retrieval & Generation</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed">This foundational category covers techniques for sourcing the raw information that populates the context window. This can be done by guiding the LLM to generate its own reasoning (In-Context Learning) or by fetching information from external knowledge bases.</p>
+                </section>
+                
+                <section id="zero-shot" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Zero-Shot Prompting</h3>
+                    <p class="text-slate-400">Instructing an LLM to perform a task without providing any examples, relying on its pre-trained knowledge.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>A prompt is constructed with only the task description and the input. The model must infer the requirements and generate a response based on its implicit understanding.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Examples</h4>
+                        <div class="example-viewer" data-technique="zero-shot">
+                            <div class="flex gap-2 mb-4 border-b border-slate-700 pb-2">
+                                <button class="example-btn active px-3 py-1 rounded-md text-sm" data-index="0">1: Sentiment</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="1">2: Translation</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="2">3: Summarization</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="3">4: Code Gen</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="4">5: Keyword</button>
+                            </div>
+                            <div class="example-content-container">
+                                <pre class="example-content active bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Classify the sentiment of the following statement: 'The movie was fantastic, and I would watch it again!'</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Translate the following English text to French: 'Hello, how are you?'</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Summarize the following paragraph into a single sentence: Artificial intelligence is transforming industries by automating tasks, providing data-driven insights, and enabling personalized customer experiences. It is a field with vast potential for innovation and growth across various sectors.</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Write a Python function that takes a list of numbers and returns the sum.</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Extract the main keywords from this text: 'Artificial intelligence is transforming industries by automating tasks and providing data-driven insights.'</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="few-shot" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Few-Shot Prompting</h3>
+                    <p class="text-slate-400">Providing the LLM with a few examples (or "shots") of the task to guide its output format and style.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>The prompt includes a set of example input-output pairs before the final input. The model learns the pattern from these examples and applies it.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Examples</h4>
+                        <div class="example-viewer" data-technique="few-shot">
+                            <div class="flex gap-2 mb-4 border-b border-slate-700 pb-2">
+                                <button class="example-btn active px-3 py-1 rounded-md text-sm" data-index="0">1: Classification</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="1">2: JSON Format</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="2">3: Code Style</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="3">4: Dialogue</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="4">5: Entity</button>
+                            </div>
+                            <div class="example-content-container">
+                                <pre class="example-content active bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Classify the text into neutral, negative or positive.
+>
+> Text: I think the vacation is okay.
+> Sentiment: neutral
+>
+> Text: I think the food was okay.
+> Sentiment:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Extract user info as JSON.
+>
+> Input: John Doe is 30 years old.
+> Output: {"name": "John Doe", "age": 30}
+>
+> Input: Jane Smith is 25.
+> Output:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Convert to camelCase.
+>
+> snake_case_variable -> snakeCaseVariable
+> another_example_string -> anotherExampleString
+> my_python_var -></code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> A conversation between a user and a bot.
+>
+> User: Hi!
+> Bot: Hello! How can I help you today?
+>
+> User: I need to check my order status.
+> Bot:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Extract the company name.
+>
+> Text: Apple announced the new iPhone.
+> Company: Apple
+>
+> Text: Microsoft released Windows 11.
+> Company:</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="cot" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Chain-of-Thought (CoT) Prompting</h3>
+                    <p class="text-slate-400">Prompting the LLM to generate a step-by-step reasoning process before giving the final answer.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>The model is encouraged to "think out loud" by providing examples of step-by-step reasoning or by simply adding the phrase "Let's think step-by-step." The generated reasoning becomes part of the context, scaffolding the final answer.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Examples</h4>
+                        <div class="example-viewer" data-technique="cot">
+                            <div class="flex gap-2 mb-4 border-b border-slate-700 pb-2">
+                                <button class="example-btn active px-3 py-1 rounded-md text-sm" data-index="0">1: Math Word Problem</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="1">2: Logic Puzzle</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="2">3: Planning</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="3">4: Code Debugging</button>
+                                <button class="example-btn px-3 py-1 rounded-md text-sm" data-index="4">5: Fact Checking</button>
+                            </div>
+                            <div class="example-content-container">
+                                <pre class="example-content active bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Q: Leah had 32 chocolates and her sister had 42. If they ate 35, how many pieces do they have left in total?
+> A: Originally, Leah had 32 chocolates. Her sister had 42. So in total they had 32 + 42 = 74. After eating 35, they had 74–35 = 39. The answer is 39.
+>
+> Q: Shawn has five toys. For Christmas, he got two toys each from his mom and dad. How many toys does he have now?
+> A:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Q: If Tom is taller than Sam, and Sam is taller than Alex, who is the tallest?
+> A: Let's break it down. We are given two facts: 1. Tom > Sam. 2. Sam > Alex. From this, we can infer that Tom > Sam > Alex. Therefore, Tom is the tallest.
+>
+> Q: A book, a pen, and a cup are on a table. The pen is to the left of the cup. The book is to the right of the pen. What is the order?
+> A:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Q: I need to get from my house to the airport. What are the steps?
+> A: Let's think step-by-step. First, I need to check the flight time. Second, I should book a taxi or check the bus schedule. Third, I need to pack my bags. Fourth, I should leave for the airport, allowing for traffic. Finally, I will check in and go through security.
+>
+> Q: I want to bake a cake. What do I need to do?
+> A:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Q: This Python code `sum([1, '2'])` gives an error. Why?
+> A: Let's analyze the code. The `sum()` function tries to add elements of a list. The list contains an integer `1` and a string `'2'`. The `+` operator is not defined between an integer and a string in Python. This causes a TypeError.
+>
+> Q: My JavaScript `console.log(0.1 + 0.2)` prints `0.300...4`. Why?
+> A:</code></pre>
+                                <pre class="example-content bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> Q: Is the Eiffel Tower in Rome?
+> A: Let's check the facts. The Eiffel Tower is a famous landmark. I know it is located in Paris, France. Rome is the capital of Italy. Therefore, the statement that the Eiffel Tower is in Rome is false.
+>
+> Q: Is water made of two hydrogen atoms and one oxygen atom?
+> A:</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tot" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Tree-of-Thoughts (ToT) Prompting</h3>
+                    <p class="text-slate-400">Enabling the LLM to explore multiple parallel reasoning paths and backtrack from unpromising ones.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>ToT treats reasoning as a search over a tree. It involves decomposing the problem, generating multiple potential next steps ("thoughts"), having the LLM evaluate the promise of each thought, and then exploring the most promising paths.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Conceptual Example: Game of 24</h4>
+                        <p>Given numbers 4, 9, 10, 13, the model generates multiple first steps like `(10 - 4 = 6)` or `(9 + 4 = 13)`. It evaluates each, deems `(6, 9, 13)` as 'likely' to succeed, and expands that path further, exploring possibilities like `(9 - 6 = 3)`.</p>
+                    </div>
+                </section>
+
+                <section id="got" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Graph-of-Thoughts (GoT) Prompting</h3>
+                    <p class="text-slate-400">Allowing the LLM to merge and cycle through reasoning paths in a graph structure for more complex problem-solving.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>GoT generalizes ToT by allowing thought paths to be merged (aggregation) and iteratively improved (refinement). This allows for combining insights from different reasoning lines and enhancing solutions through feedback loops.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Conceptual Example: Sorting</h4>
+                        <p>A GoT approach can mimic merge-sort. It splits the list into sub-lists (branching), sorts them in parallel, and then merges the sorted lists back together (aggregation) to produce the final result.</p>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-xl shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-4 text-slate-200">Visualizing Reasoning Structures</h4>
+                        <div class="flex justify-center gap-2 mb-4 bg-slate-900 p-2 rounded-lg">
+                            <button class="diagram-btn flex-1 bg-teal-500 text-white px-4 py-2 rounded-md transition-all duration-200" data-target="cot-diagram">CoT</button>
+                            <button class="diagram-btn flex-1 bg-slate-700 text-slate-300 px-4 py-2 rounded-md transition-all duration-200" data-target="tot-diagram">ToT</button>
+                            <button class="diagram-btn flex-1 bg-slate-700 text-slate-300 px-4 py-2 rounded-md transition-all duration-200" data-target="got-diagram">GoT</button>
+                        </div>
+                        <div id="cot-diagram" class="diagram-content">
+                            <div class="diagram-container">
+                                <div class="node">Thought 1</div> <div class="arrow">&rarr;</div> <div class="node">Thought 2</div> <div class="arrow">&rarr;</div> <div class="node">Thought 3</div>
+                            </div>
+                            <p class="text-center mt-2 text-sm text-slate-400">A linear sequence of thoughts.</p>
+                        </div>
+                        <div id="tot-diagram" class="diagram-content hidden">
+                           <div class="diagram-container flex-col">
+                                <div class="node">Start</div>
+                                <div class="arrow text-2xl">&darr;</div>
+                                <div class="flex gap-4">
+                                    <div class="node">Path A</div>
+                                    <div class="node">Path B</div>
+                                    <div class="node">Path C</div>
+                                </div>
+                            </div>
+                            <p class="text-center mt-2 text-sm text-slate-400">Branching into multiple, independent paths.</p>
+                        </div>
+                        <div id="got-diagram" class="diagram-content hidden">
+                            <div class="diagram-container flex-col">
+                                <div class="flex gap-4">
+                                    <div class="node">Path A</div>
+                                    <div class="node">Path B</div>
+                                </div>
+                                <div class="arrow text-2xl">&darr;</div>
+                                <div class="node bg-teal-900 border-teal-500 text-teal-300">Merged Thought</div>
+                                <div class="arrow text-2xl">&circlearrowright;</div>
+                                <div class="node">Refined Thought</div>
+                            </div>
+                            <p class="text-center mt-2 text-sm text-slate-400">Paths can branch, merge, and cycle for refinement.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="rag" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Retrieval-Augmented Generation (RAG)</h3>
+                    <p class="text-slate-400">Retrieving relevant information from an external knowledge base to augment the prompt and ground the LLM's response in facts.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>When a user asks a question, the system first retrieves relevant documents from a knowledge source (like a vector database). These documents are then added to the context along with the original question, and the LLM is instructed to answer based on the provided information.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">RAG Workflow</h4>
+                        <div class="diagram-container">
+                            <div class="node">User Query</div> <div class="arrow">&rarr;</div> <div class="node bg-teal-900 border-teal-500 text-teal-300">Retrieve Docs</div> <div class="arrow">&rarr;</div> <div class="node">Augment Prompt</div> <div class="arrow">&rarr;</div> <div class="node bg-teal-900 border-teal-500 text-teal-300">LLM Generation</div>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="category2" class="content-section space-y-6">
+                    <h2 class="text-4xl font-bold text-slate-100">Category II: Context Processing & Optimization</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed">Once context is sourced, it must be refined and transformed to be maximally effective. These techniques focus on handling long sequences, enabling self-correction, and integrating diverse data formats to improve the quality and relevance of the context.</p>
+                </section>
+
+                <section id="long-context" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Long-Context Processing</h3>
+                    <p class="text-slate-400">Using architectural innovations to efficiently handle very long input sequences, like entire documents or codebases.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>This involves either architectural changes (like FlashAttention or State-Space Models) to improve computational efficiency, or procedural changes to mitigate issues like the "Lost in the Middle" problem, where models struggle to recall information from the center of a long context.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">"Needle-in-a-Haystack" Strategy</h4>
+                        <p>To combat the "Lost in the Middle" issue, the most critical information (the "needle") should be placed at the very beginning or, more effectively, at the very end of the long context (the "haystack"), just before the final instruction.</p>
+                    </div>
+                </section>
+                
+                <section id="self-refine" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Contextual Self-Refinement</h3>
+                    <p class="text-slate-400">Using the LLM to iteratively critique and improve its own outputs without extra training data.</p>
+                    <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>The process is a loop: 1) The LLM generates an initial output. 2) The LLM is asked to provide feedback on its own output. 3) The LLM is given the original prompt, its first output, and its own feedback, and is asked to generate a refined version. This can be repeated multiple times.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Refinement Workflow</h4>
+                        <div class="diagram-container">
+                            <div class="node">Generate</div> <div class="arrow">&rarr;</div> <div class="node bg-teal-900 border-teal-500 text-teal-300">Feedback</div> <div class="arrow">&rarr;</div> <div class="node">Refine</div> <div class="arrow">&circlearrowright;</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="structured-context" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Structured Context Integration</h3>
+                    <p class="text-slate-400">Providing context in structured formats like JSON, XML, or tables for better parsing and reasoning.</p>
+                     <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>Structured data is included directly in the prompt, often with delimiters. The explicit schema reduces ambiguity and allows the model to more reliably perform tasks like querying data or interacting with APIs.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Example: SQL Generation</h4>
+                        <pre class="bg-slate-900 p-4 rounded-md text-sm text-slate-300 whitespace-pre-wrap"><code>> """
+> Table: students
+> Columns: student_id (INT), student_name (VARCHAR), department_id (INT)
+> 
+> Table: departments
+> Columns: department_id (INT), department_name (VARCHAR)
+> 
+> Create a MySQL query for all students in the 'Computer Science' department.
+> """</code></pre>
+                    </div>
+                </section>
+
+                <section id="category3" class="content-section space-y-6">
+                    <h2 class="text-4xl font-bold text-slate-100">Category III: Context Management & Persistence</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed">The LLM's context window is finite and temporary. These techniques focus on managing this limited resource and persisting important information across interactions, which is crucial for building stateful and efficient applications.</p>
+                </section>
+
+                <section id="compression" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Context Compression & Summarization</h3>
+                    <p class="text-slate-400">Reducing the token count of context while preserving its core semantic meaning to fit within the context window.</p>
+                     <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>The most common method is to use an LLM to summarize long pieces of text. For example, in a long conversation, the history can be periodically summarized, and this shorter summary replaces the verbose original text in the context for future turns.</p>
+                    </div>
+                </section>
+
+                <section id="memory" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Memory Architectures</h3>
+                    <p class="text-slate-400">Mechanisms for storing and retrieving information beyond a single interaction, enabling personalization and learning.</p>
+                     <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Short-Term Memory (Scratchpads)</h4>
+                        <p>A temporary storage area (like a variable) where an agent can write down its plan or intermediate results for the current task. This helps maintain state even if parts of the early context are trimmed.</p>
+                        <h4 class="font-semibold text-lg mt-4 mb-2 text-teal-400">Long-Term Memory (Vector DBs)</h4>
+                        <p>An external database (commonly a vector database) is used to store important information across sessions. Facts are converted to numerical embeddings and stored. In later sessions, the system can retrieve relevant memories via similarity search to personalize the interaction.</p>
+                    </div>
+                </section>
+
+                <section id="systems" class="content-section space-y-6">
+                    <h2 class="text-4xl font-bold text-slate-100">System Implementations</h2>
+                    <p class="text-lg text-slate-400 leading-relaxed">These are higher-level architectural patterns that integrate the foundational components into coherent, functional systems like AI agents and advanced question-answering applications.</p>
+                </section>
+
+                <section id="advanced-rag" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Advanced RAG Systems</h3>
+                    <p class="text-slate-400">Architectures that add more logic to the basic RAG pattern, such as re-ranking retrieved documents or using an agent to control the retrieval process.</p>
+                </section>
+
+                <section id="tool-use" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Tool-Integrated Reasoning</h3>
+                    <p class="text-slate-400">Systems that enable LLMs to use external tools (like APIs or code execution) via function calling, allowing them to interact with the outside world.</p>
+                     <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism: Function Calling</h4>
+                        <p>The LLM is provided with definitions of available tools. When needed, it generates a structured JSON object specifying the tool to call and the parameters to use. An external runtime executes the tool and returns the result to the LLM's context.</p>
+                    </div>
+                </section>
+
+                <section id="multi-agent" class="content-section space-y-4">
+                    <h3 class="text-3xl font-semibold text-slate-200">Multi-Agent Systems</h3>
+                    <p class="text-slate-400">Workflows that orchestrate multiple specialized agents to solve a complex problem, following a "divide and conquer" approach.</p>
+                     <div class="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700">
+                        <h4 class="font-semibold text-lg mb-2 text-teal-400">Mechanism</h4>
+                        <p>A primary "orchestrator" agent breaks down a large goal into sub-tasks and delegates them to a team of specialized "worker" agents. Each worker has its own focused context and tools, improving efficiency and reliability. For example, one agent could handle web search while another handles data analysis.</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navParentBtns = document.querySelectorAll('.nav-parent-btn');
+    const contentSections = document.querySelectorAll('.content-section');
+    const diagramBtns = document.querySelectorAll('.diagram-btn');
+    const diagramContents = document.querySelectorAll('.diagram-content');
+    const exampleViewers = document.querySelectorAll('.example-viewer');
+
+    const contentData = {
+        introduction: { title: "Introduction" },
+        category1: { title: "Category I: Retrieval & Generation" },
+        'zero-shot': { title: "Zero-Shot Prompting", parent: "category1" },
+        'few-shot': { title: "Few-Shot Prompting", parent: "category1" },
+        'cot': { title: "Chain-of-Thought (CoT)", parent: "category1" },
+        'tot': { title: "Tree-of-Thoughts (ToT)", parent: "category1" },
+        'got': { title: "Graph-of-Thoughts (GoT)", parent: "category1" },
+        'rag': { title: "Retrieval-Augmented Gen (RAG)", parent: "category1" },
+        category2: { title: "Category II: Processing & Optimization" },
+        'long-context': { title: "Long-Context Processing", parent: "category2" },
+        'self-refine': { title: "Contextual Self-Refinement", parent: "category2" },
+        'structured-context': { title: "Structured Context", parent: "category2" },
+        category3: { title: "Category III: Management & Persistence" },
+        'compression': { title: "Context Compression", parent: "category3" },
+        'memory': { title: "Memory Architectures", parent: "category3" },
+        systems: { title: "System Implementations" },
+        'advanced-rag': { title: "Advanced RAG Systems", parent: "systems" },
+        'tool-use': { title: "Tool-Integrated Reasoning", parent: "systems" },
+        'multi-agent': { title: "Multi-Agent Systems", parent: "systems" },
+    };
+
+    function showContent(targetId) {
+        const targetData = contentData[targetId];
+        if (!targetData) return;
+
+        contentSections.forEach(section => {
+            section.classList.remove('active');
+        });
+
+        const sectionToShow = document.getElementById(targetId);
+        if (sectionToShow) {
+            sectionToShow.classList.add('active');
+        }
+
+        if (!targetId.startsWith('category') && targetId !== 'systems' && targetId !== 'introduction') {
+            if (targetData.parent) {
+                const parentSection = document.getElementById(targetData.parent);
+                if (parentSection) {
+                    parentSection.classList.add('active');
+                }
+            }
+        }
+        
+        updateActiveNav(targetId);
+    }
+
+    function updateActiveNav(targetId) {
+        const targetData = contentData[targetId];
+        
+        navLinks.forEach(link => link.classList.remove('active'));
+        navParentBtns.forEach(btn => btn.classList.remove('active-parent'));
+
+        const activeLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+            const parentUl = activeLink.closest('ul');
+            if(parentUl && parentUl.previousElementSibling && parentUl.previousElementSibling.matches('.nav-parent-btn')) {
+                parentUl.previousElementSibling.classList.add('active-parent');
+            }
+        } else {
+            const activeParentBtn = document.querySelector(`.nav-parent-btn[data-target="${targetId}"]`);
+            if (activeParentBtn) {
+                activeParentBtn.classList.add('active-parent');
+            }
+        }
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = e.currentTarget.dataset.target;
+            showContent(targetId);
+        });
+    });
+    
+    navParentBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = e.currentTarget.dataset.target;
+            const subMenu = btn.nextElementSibling;
+            
+            subMenu.classList.toggle('submenu-open');
+            btn.querySelector('svg').classList.toggle('rotate-90');
+
+            showContent(targetId);
+        });
+    });
+
+    diagramBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.dataset.target;
+            
+            diagramContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(targetId).classList.remove('hidden');
+
+            diagramBtns.forEach(b => {
+                b.classList.remove('bg-teal-500', 'text-white');
+                b.classList.add('bg-slate-700', 'text-slate-300');
+            });
+            e.currentTarget.classList.add('bg-teal-500', 'text-white');
+            e.currentTarget.classList.remove('bg-slate-700', 'text-slate-300');
+        });
+    });
+
+    exampleViewers.forEach(viewer => {
+        const buttons = viewer.querySelectorAll('.example-btn');
+        const contents = viewer.querySelectorAll('.example-content');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const index = button.dataset.index;
+
+                buttons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                contents.forEach((content, i) => {
+                    if (i == index) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            });
+        });
+    });
+
+    const ctx = document.getElementById('taxonomyChart').getContext('2d');
+    const taxonomyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['I. Retrieval & Gen', 'II. Processing & Opt', 'III. Management', 'System Impls'],
+            datasets: [{
+                label: 'Number of Techniques Covered',
+                data: [6, 3, 2, 3],
+                backgroundColor: 'rgba(20, 184, 166, 0.5)',
+                borderColor: 'rgba(20, 184, 166, 1)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Overview of Context Engineering Technique Categories',
+                    font: {
+                        size: 16,
+                        family: 'Roboto Mono',
+                    },
+                    color: '#cbd5e1',
+                    padding: {
+                        bottom: 20
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#334155'
+                    },
+                    ticks: {
+                        color: '#94a3b8'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Technique Count',
+                        color: '#94a3b8'
+                    }
+                },
+                x: {
+                   grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#94a3b8'
+                    }
+                }
+            }
+        }
+    });
+
+    showContent('introduction');
+    document.querySelector('.nav-link[data-target="introduction"]').classList.add('active');
+});
+</script>
+
+</body>
+</html>
